@@ -1,0 +1,22 @@
+# Environment files
+envs/
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Build artifacts
+bin/
+
+# IDE
+.vscode/
+.idea/
+
+# Jenkins
+Jenkinsfile

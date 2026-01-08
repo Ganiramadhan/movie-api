@@ -16,9 +16,6 @@ WORKDIR /root/
 
 COPY --from=builder /app/main .
 
-COPY --from=builder /app/envs ./envs
-
-
 EXPOSE 8010
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
