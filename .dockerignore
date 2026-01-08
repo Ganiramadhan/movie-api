@@ -9,7 +9,6 @@ envs/
 
 # Documentation
 README.md
-docs/
 
 # Build artifacts
 bin/
