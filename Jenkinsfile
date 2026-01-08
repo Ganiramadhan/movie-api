@@ -8,12 +8,12 @@ pipeline {
         // Application Configuration 
         IMAGE_NAME = "movie-api"
         CONTAINER_NAME = "movie-api"
-        APP_PORT = "3010"
-        CONTAINER_PORT = "3010"
+        APP_PORT = "8010"
+        CONTAINER_PORT = "8010"
         
         // Computed values
         IMAGE_FULL = "${REGISTRY}/${IMAGE_NAME}"
-        NEW_VERSION = ""
+        // NEW_VERSION will be set dynamically in Prepare stage
     }
 
     options {
@@ -85,10 +85,11 @@ pipeline {
                         major = major + 1
                     }
                     
-                    // CRITICAL: Direct string assignment without intermediate variable
-                    NEW_VERSION = "v${major}.${minor}.${patch}"
+                    // Set new version as environment variable
+                    def newVersion = "v${major}.${minor}.${patch}"
+                    env.NEW_VERSION = newVersion
                     
-                    echo "✨ New version: ${NEW_VERSION}"
+                    echo "✨ New version: ${newVersion}"
                 }
             }
         }
@@ -109,9 +110,9 @@ pipeline {
             }
             steps {
                 echo "🔨 Building Docker image..."
-                echo "Image: ${IMAGE_FULL}:${NEW_VERSION}"
+                echo "Image: ${IMAGE_FULL}:${env.NEW_VERSION}"
                 sh """
-                    docker build -t ${IMAGE_FULL}:${NEW_VERSION} .
+                    docker build -f docker/Dockerfile -t ${IMAGE_FULL}:${env.NEW_VERSION} .
                 """
             }
         }
@@ -130,9 +131,9 @@ pipeline {
                     sh """
                         echo "\$DOCKER_PASS" | docker login ${REGISTRY} -u "\$DOCKER_USER" --password-stdin
                         
-                        docker push ${IMAGE_FULL}:${NEW_VERSION}
+                        docker push ${IMAGE_FULL}:${env.NEW_VERSION}
                         
-                        docker tag ${IMAGE_FULL}:${NEW_VERSION} ${IMAGE_FULL}:latest
+                        docker tag ${IMAGE_FULL}:${env.NEW_VERSION} ${IMAGE_FULL}:latest
                         docker push ${IMAGE_FULL}:latest
                         
                         docker logout ${REGISTRY}
@@ -152,15 +153,19 @@ pipeline {
                     docker stop ${CONTAINER_NAME} || true
                     docker rm ${CONTAINER_NAME} || true
                     
+                    # Kill any process using the port and wait a bit
+                    docker ps --filter "publish=${APP_PORT}" --format "{{.Names}}" | xargs -r docker stop || true
+                    sleep 3
+                    
                     # Pull new image
-                    docker pull ${IMAGE_FULL}:${NEW_VERSION}
+                    docker pull ${IMAGE_FULL}:${env.NEW_VERSION}
                     
                     # Run new container
                     docker run -d \\
                         --name ${CONTAINER_NAME} \\
                         --restart unless-stopped \\
                         -p ${APP_PORT}:${CONTAINER_PORT} \\
-                        ${IMAGE_FULL}:${NEW_VERSION}
+                        ${IMAGE_FULL}:${env.NEW_VERSION}
                 """
             }
         }
@@ -200,7 +205,7 @@ pipeline {
                     # Keep only last 3 versions (excluding latest and current)
                     docker images ${IMAGE_FULL} --format "{{.ID}} {{.Tag}}" | \\
                     grep -v "latest" | \\
-                    grep -v "${NEW_VERSION}" | \\
+                    grep -v "${env.NEW_VERSION}" | \\
                     tail -n +4 | \\
                     awk '{print \$1}' | \\
                     xargs -r docker rmi -f || true
@@ -213,7 +218,7 @@ pipeline {
         success {
             echo "✅ Deployment successful!"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "📦 Image: ${IMAGE_FULL}:${NEW_VERSION}"
+            echo "📦 Image: ${IMAGE_FULL}:${env.NEW_VERSION}"
             echo "🐳 Container: ${CONTAINER_NAME}"
             echo "🔗 Port: ${APP_PORT} → ${CONTAINER_PORT}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -228,7 +233,7 @@ pipeline {
             echo "  Project: ${IMAGE_NAME}"
             echo "  Branch: ${env.BRANCH_NAME}"
             echo "  Build: #${env.BUILD_NUMBER}"
-            echo "  Version: ${NEW_VERSION}"
+            echo "  Version: ${env.NEW_VERSION}"
         }
     }
 }
