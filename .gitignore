@@ -1,0 +1,47 @@
+# Environment variables (JANGAN COMMIT FILE .env)
+.env
+.env.local
+.env.production
+envs/.env*
+
+# Build outputs
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test files
+*.test
+*.out
+go.sum.backup
+
+# Vendor
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+*.cover
+coverage/
+
+# Air (live reload)
+tmp/
+.air.toml
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,424 @@
+basePath: /api/v1
+definitions:
+  models.Movie:
+    description: Movie entity stored in database
+    properties:
+      adult:
+        example: false
+        type: boolean
+      backdrop_path:
+        example: /52AfXWuXCHn3UjD17rBruA9f5qb.jpg
+        type: string
+      created_at:
+        type: string
+      genre_ids:
+        example: 18,53
+        type: string
+      id:
+        example: 1
+        type: integer
+      original_language:
+        example: en
+        type: string
+      original_title:
+        example: Fight Club
+        type: string
+      overview:
+        example: A ticking-Loss insurance clerk...
+        type: string
+      popularity:
+        example: 61.416
+        type: number
+      poster_path:
+        example: /pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg
+        type: string
+      release_date:
+        example: "1999-10-15"
+        type: string
+      title:
+        example: Fight Club
+        type: string
+      tmdb_id:
+        example: 550
+        type: integer
+      updated_at:
+        type: string
+      vote_average:
+        example: 8.4
+        type: number
+      vote_count:
+        example: 26280
+        type: integer
+    type: object
+  utils.StandardResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      meta: {}
+      status:
+        type: string
+    type: object
+host: localhost:8010
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://github.com/yourusername/movie-backend
+  description: Backend API untuk konsumsi TMDB API, manajemen data film, dashboard
+    analytics, dan chart visualization
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Movie Backend API
+  version: "1.0"
+paths:
+  /charts:
+    get:
+      consumes:
+      - application/json
+      description: Get combined pie chart (by language) and column chart (by year)
+        data
+      parameters:
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get chart data for visualization
+      tags:
+      - charts
+  /charts/column:
+    get:
+      consumes:
+      - application/json
+      description: Get movie distribution by release year for column chart visualization
+      parameters:
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Column chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve column chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get column chart data by year
+      tags:
+      - charts
+  /charts/monthly/{year}:
+    get:
+      consumes:
+      - application/json
+      description: Get movie distribution by month for a specific year
+      parameters:
+      - description: Year (e.g., 2024)
+        in: path
+        name: year
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid year
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve monthly chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get monthly chart data for a specific year
+      tags:
+      - charts
+  /charts/pie:
+    get:
+      consumes:
+      - application/json
+      description: Get movie distribution by original language for pie chart visualization
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pie chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve pie chart data
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get pie chart data by language
+      tags:
+      - charts
+  /dashboard/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive dashboard analytics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard statistics
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve statistics
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get dashboard statistics
+      tags:
+      - dashboard
+  /movies:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all movies with pagination, search, sorting, and date
+        range filter
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by title or overview
+        in: query
+        name: search
+        type: string
+      - default: updated_at
+        description: Sort by field (id, title, release_date, vote_average, popularity,
+          created_at, updated_at)
+        in: query
+        name: sort_by
+        type: string
+      - default: DESC
+        description: Sort order (ASC/DESC)
+        in: query
+        name: order
+        type: string
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of movies
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get all movies
+      tags:
+      - movies
+    post:
+      consumes:
+      - application/json
+      description: Create a new movie entry
+      parameters:
+      - description: Movie object
+        in: body
+        name: movie
+        required: true
+        schema:
+          $ref: '#/definitions/models.Movie'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Movie created successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Create a new movie
+      tags:
+      - movies
+  /movies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a movie by ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie deleted successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid movie ID
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Delete a movie
+      tags:
+      - movies
+    get:
+      consumes:
+      - application/json
+      description: Get a single movie by its ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie details
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid movie ID
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "404":
+          description: Movie not found
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get movie by ID
+      tags:
+      - movies
+    put:
+      consumes:
+      - application/json
+      description: Update an existing movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Movie object
+        in: body
+        name: movie
+        required: true
+        schema:
+          $ref: '#/definitions/models.Movie'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie updated successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Update a movie
+      tags:
+      - movies
+  /sync/last-log:
+    get:
+      consumes:
+      - application/json
+      description: Get the most recent sync operation log
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Last sync log
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Failed to retrieve sync log
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Get last sync log
+      tags:
+      - sync
+  /sync/movies:
+    post:
+      consumes:
+      - application/json
+      description: Fetch and sync popular movies from TMDB API
+      parameters:
+      - default: 1
+        description: Number of pages to sync (1-10)
+        in: query
+        name: pages
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sync completed successfully
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+        "500":
+          description: Sync failed
+          schema:
+            $ref: '#/definitions/utils.StandardResponse'
+      summary: Sync movies from TMDB
+      tags:
+      - sync
+schemes:
+- http
+- https
+swagger: "2.0"
